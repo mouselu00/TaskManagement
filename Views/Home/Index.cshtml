@@ -1,8 +1,86 @@
-﻿@{
+﻿@model TaskDataViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+<div class="row">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Index" asp-controller="Home" method="POST">
+                    <div class="mb-3 row">
+                        <label for="UserName" class="col-sm-3 col-form-label">使用者名稱</label>
+                        <div class="col-sm-9">
+                            <input type="text" asp-for="TaskData.UserName" name="UserName" class="form-control" id="UserName">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="ProjectName" class="col-sm-3 col-form-label">專案名稱</label>
+                        <div class="col-sm-9">
+                            <input type="text" asp-for="TaskData.ProjectName" name="ProjectName" class="form-control" id="ProjectName">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="Description" class="col-sm-3 col-form-label">説明</label>
+                        <div class="col-sm-9">
+                            <textarea asp-for="TaskData.Description" name="Description" class="form-control" id="Description">
+                        </textarea>
+                        </div>
+                    </div>
+                    <div class="mb-3 d-flex gap-3 justify-content-end">
+                        <button type="submit" class="btn btn-dark">提交</button>
+                        <button type="reset" class="btn btn-outline-dark">重設</button>
+                    </div>
+                    <div class="mb-3 row">
+                        <div class="text-danger" asp-validation-summary="All"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <form class="d-flex gap-3" asp-action="Search" asp-controller="Home" method="GET">
+                    <input type="date" class="form-control" asp-for="TaskData.Created" name="Created" value="@Model.TaskData.Created"/>
+                    <input type="text" class="form-control" asp-for="TaskData.UserName" name="UserName" value="@Model.TaskData.UserName" placeholder="名稱" />
+                    <input type="text" class="form-control" asp-for="TaskData.ProjectName" name="ProjectName" value="@Model.TaskData.ProjectName" placeholder="專案" />
+                    <button type="submit" class="btn btn-dark text-nowrap">查詢</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">日期</th>
+                            <th scope="col">名稱</th>
+                            <th scope="col">專案</th>
+                            <th scope="col">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model?.TaskDatas != null)
+                        {
+                            foreach (TaskData rowData in Model.TaskDatas)
+                            {
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td>@rowData.Created?.ToString("yyyy-MM-dd")</td>
+                                    <td>@rowData.UserName</td>
+                                    <td>@rowData.ProjectName</td>
+                                    <td>@rowData.Description</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
+
+
