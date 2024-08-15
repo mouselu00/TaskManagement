@@ -8,7 +8,10 @@
     <div class="col-4">
         <div class="card">
             <div class="card-body">
-                <form asp-action="Index" asp-controller="Home" method="POST">
+                @{
+                    string actionName = Model.isEdit ? "Edit" : "Index";
+                }
+                <form asp-action="@actionName" asp-controller="Home" method="POST">
                     <div class="mb-3 row">
                         <label for="UserName" class="col-sm-3 col-form-label">使用者名稱</label>
                         <div class="col-sm-9">
@@ -29,8 +32,17 @@
                         </div>
                     </div>
                     <div class="mb-3 d-flex gap-3 justify-content-end">
-                        <button type="submit" class="btn btn-dark">提交</button>
-                        <button type="reset" class="btn btn-outline-dark">重設</button>
+                        @if (!Model.isEdit)
+                        {
+                            <button type="submit" class="btn btn-dark" data-isEdit="@Model.isEdit">提交</button>
+                            <button type="reset" class="btn btn-outline-dark">重設</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-dark" data-isEdit="@Model.isEdit">更新</button>
+                            <a class="btn btn-outline-danger" asp-action="Index" asp-controller="Home">取消</a>
+                            <input type="hidden" asp-for="@Model.TaskData.Id" name="Id" />
+                        }
                     </div>
                     <div class="mb-3 row">
                         <div class="text-danger" asp-validation-summary="All"></div>
@@ -40,47 +52,89 @@
         </div>
     </div>
     <div class="col">
-        <div class="card">
-            <div class="card-body">
-                <form class="d-flex gap-3" asp-action="Search" asp-controller="Home" method="GET">
-                    <input type="date" class="form-control" asp-for="TaskData.Created" name="Created" value="@Model.TaskData.Created"/>
-                    <input type="text" class="form-control" asp-for="TaskData.UserName" name="UserName" value="@Model.TaskData.UserName" placeholder="名稱" />
-                    <input type="text" class="form-control" asp-for="TaskData.ProjectName" name="ProjectName" value="@Model.TaskData.ProjectName" placeholder="專案" />
-                    <button type="submit" class="btn btn-dark text-nowrap">查詢</button>
-                </form>
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form class="d-flex gap-3" asp-action="Search" asp-controller="Home" method="GET">
+                            <input type="date" class="form-control" asp-for="TaskData.Created" name="Created" value="@Model.TaskData.Created?.ToString("yyyy-MM-dd")" />
+                            <input type="text" class="form-control" asp-for="TaskData.UserName" name="UserName" value="@Model.TaskData.UserName" placeholder="名稱" />
+                            <input type="text" class="form-control" asp-for="TaskData.ProjectName" name="ProjectName" value="@Model.TaskData.ProjectName" placeholder="專案" />
+                            <button type="submit" class="btn btn-dark text-nowrap">查詢</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="card">
-            <div class="card-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">日期</th>
-                            <th scope="col">名稱</th>
-                            <th scope="col">專案</th>
-                            <th scope="col">説明</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model?.TaskDatas != null)
-                        {
-                            foreach (TaskData rowData in Model.TaskDatas)
-                            {
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td>@rowData.Created?.ToString("yyyy-MM-dd")</td>
-                                    <td>@rowData.UserName</td>
-                                    <td>@rowData.ProjectName</td>
-                                    <td>@rowData.Description</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table--responsive">
+                            <table class="table" data-tag="tableContainer">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">日期</th>
+                                        <th scope="col">名稱</th>
+                                        <th scope="col">專案</th>
+                                        <th scope="col">説明</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model?.TaskDatas != null)
+                                    {
+                                        int No = 0;
+                                        foreach (TaskData rowData in Model.TaskDatas)
+                                        {
+                                            <tr>
+                                                <th>@(++No)</th>
+                                                <td>@rowData.Created?.ToString("yyyy-MM-dd")</td>
+                                                <td>@rowData.UserName</td>
+                                                <td>@rowData.ProjectName</td>
+                                                <td>@rowData.Description</td>
+                                                <td>
+                                                    <a class="btn btn-dark" data-tag="btnEdit" asp-action="Edit" asp-controller="Home" asp-route-id="@rowData.Id">編輯</a>
+                                                    <button class="btn btn-outline-danger" data-tag="btnDelete" data-id="@(rowData.Id)">刪除</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+@section Scripts {
 
+    <script type="module">
+        const tableContainer = document.querySelector("[data-tag='tableContainer']");
+        document.addEventListener("DOMContentLoaded", () => {
+
+
+            tableContainer.addEventListener("click", async (event) => {
+                if (event.target.matches("[data-tag='btnDelete']")) {
+                    const isDelete = window.confirm("確定要刪除？")
+                    console.log(`Delete ${event.target.dataset?.id}`);
+                    if (!isDelete) return false;
+
+                    const response = await fetch("./Home/delete", {
+                        method: "post",
+                        headers: {
+                            "content-type": "application/json",
+                        },
+                        body: JSON.stringify({ id: event.target.dataset?.id })
+                    })
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+
+                }
+            })
+        });
+    </script>
+}

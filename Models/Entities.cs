@@ -8,10 +8,10 @@ namespace TaskManagement.Models
 
     public class TaskData
     {
-        public Guid Id { get; set; }  = Guid.NewGuid();
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        [DataType(dataType:DataType.Date)]
+        [DataType(dataType: DataType.Date)]
         public DateTime? Created { get; set; } = DateTime.Now;
 
         [Required(AllowEmptyStrings = false, ErrorMessage = "人員名稱必填！")]
@@ -24,9 +24,12 @@ namespace TaskManagement.Models
 
     }
 
-    public class TaskDataViewModel {
+    public class TaskDataViewModel
+    {
         public TaskData TaskData { get; set; } = new TaskData();
 
         public List<TaskData>? TaskDatas { get; set; } = null;
+
+        public bool isEdit { get; set; } = false;
     }
 }

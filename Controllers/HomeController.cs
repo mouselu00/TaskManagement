@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using TaskManagement.Models;
@@ -27,6 +29,23 @@ namespace TaskManagement.Controllers
                 TaskDatas = taskDatas
             });
 
+        }
+
+
+        [HttpPost]
+        public IActionResult Index([FromForm] TaskData parameter)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<TaskData> taskDatas = getCacheData();
+                return View("Index", new TaskDataViewModel
+                {
+                    TaskData = parameter,
+                    TaskDatas = taskDatas
+                });
+            }
+            addCacheData(parameter);
+            return RedirectToAction("Index");
         }
 
         public IActionResult Search([FromQuery] TaskData parameter)
@@ -58,8 +77,29 @@ namespace TaskManagement.Controllers
             });
         }
 
+        public IActionResult Delete([FromBody] TaskData parameter)
+        {
+            if (parameter?.Id != null)
+            {
+                deleteCacheData(parameter.Id);
+            }
+            return Ok();
+        }
+
+        public IActionResult Edit([FromRoute] string id)
+        {
+            List<TaskData> taskDatas = getCacheData();
+            int index = taskDatas.FindIndex(taskData => taskData.Id == new Guid(id));
+            return View("Index", new TaskDataViewModel
+            {
+                TaskData = taskDatas[index],
+                TaskDatas = taskDatas,
+                isEdit = true
+            });
+        }
+
         [HttpPost]
-        public IActionResult Index([FromForm] TaskData parameter)
+        public IActionResult Edit([FromForm] TaskData parameter)
         {
             if (!ModelState.IsValid)
             {
@@ -67,13 +107,14 @@ namespace TaskManagement.Controllers
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
-                    TaskDatas = taskDatas
+                    TaskDatas = taskDatas,
+                    isEdit = true,
                 });
             }
+            deleteCacheData(parameter.Id);
             addCacheData(parameter);
             return RedirectToAction("Index");
         }
-
 
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -82,6 +123,8 @@ namespace TaskManagement.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+
+        #region Service
         private List<TaskData> SetFakeData()
         {
             // faske data
@@ -116,6 +159,30 @@ namespace TaskManagement.Controllers
 
             return taskDatas;
         }
+        private TaskData getCacheData(Guid Id)
+        {
+            List<TaskData> taskDatas = new List<TaskData>();
+            var cacheEntryOption = new MemoryCacheEntryOptions()
+                  .SetSlidingExpiration(TimeSpan.FromMinutes(1))
+                  .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+                  .SetPriority(CacheItemPriority.Normal);
+
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+            {
+                // faske data
+                taskDatas = SetFakeData();
+                _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+            }
+            if (items != null)
+            {
+                taskDatas = items.ToList();
+                _cache.Remove(cacheKey);
+                _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+            }
+            int index = taskDatas.FindIndex(taskData => taskData.Id == Id);
+
+            return taskDatas[index];
+        }
 
 
         private void addCacheData(TaskData parameter)
@@ -139,5 +206,33 @@ namespace TaskManagement.Controllers
             _cache.Remove(cacheKey);
             _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
         }
+
+        private void deleteCacheData(Guid Id)
+        {
+            List<TaskData> taskDatas = new List<TaskData>();
+            var cacheEntryOption = new MemoryCacheEntryOptions()
+                  .SetSlidingExpiration(TimeSpan.FromMinutes(1))
+                  .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+                  .SetPriority(CacheItemPriority.Normal);
+
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+            {
+                // faske data
+                taskDatas = SetFakeData();
+            }
+            if (items != null)
+            {
+                taskDatas = items.ToList();
+            }
+            int index = taskDatas.FindIndex(taskData => taskData.Id == Id);
+            if (index >= 0)
+            {
+                taskDatas.RemoveAt(index);
+            }
+            _cache.Remove(cacheKey);
+            _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+        }
+
+        #endregion 
     }
 }
