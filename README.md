@@ -22,17 +22,23 @@
 - 快去暫存當作資料庫 `cache`
 
 ## 進階處理流程
-- [ ] `javascritp` 驗證（非伺服器驗證）
+- [X] `javascritp` 驗證（非伺服器驗證）
+- [ ] 自訂 `Data Annotation`
 - [ ] 導入`Repository Pattern`
 - [ ] `javascript` 代碼區隔
 - [ ] 多頁處理
+- [ ] PartielView
+- [ ] WebComponents
 - [ ] 非同步修改資料（不刷新頁面的方式更新資料）
 - [ ] 導入 `Dapper ORM` 連接資料庫
 - [ ] 細分 `Model` 
 - [ ] 導入 DI （Dependency Injection）
 - [ ] 導入 介面 （Interface） 及 服務 （Service）
-- [ ] 優化功能
+- [ ] 導入中間件
 - [ ] 導入 `Filter`
+- [ ] 自訂 `Filter`
 - [ ] 導入驗證機制（複雜/客制化）
 - [ ] 導入登入機制
+- [ ] Log記錄
 - [ ] 測試撰寫
+- [ ] 生成後車
