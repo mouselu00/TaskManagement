@@ -1,0 +1,65 @@
+﻿@model IEnumerable<TaskData>
+
+
+
+<div class="table-responsive" data-tag="tableContainer">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">日期</th>
+                <th scope="col">名稱</th>
+                <th scope="col">專案</th>
+                <th scope="col">説明</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                int No = 0;
+                foreach (TaskData rowData in Model)
+                {
+                    <tr>
+                        <th>@(++No)</th>
+                        <td>@rowData.Created?.ToString("yyyy-MM-dd")</td>
+                        <td>@rowData.UserName</td>
+                        <td>@rowData.ProjectName</td>
+                        <td>@rowData.Description</td>
+                        <td>
+                            <a class="btn btn-dark" data-tag="btnEdit" asp-action="Edit" asp-controller="Home" asp-route-id="@rowData.Id">編輯</a>
+                            <button class="btn btn-outline-danger" data-tag="btnDelete" data-id="@(rowData.Id)">刪除</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@* Section no support in partial View *@
+@* <script type="text/javascript">
+    const tableContainer = document.querySelector("[data-tag='tableContainer']");
+    document.addEventListener("DOMContentLoaded", () => {
+        tableContainer.addEventListener("click", async (event) => {
+            if (event.target.matches("[data-tag='btnDelete']")) {
+                const isDelete = window.confirm("確定要刪除？")
+                console.log(`Delete ${event.target.dataset?.id}`);
+                if (!isDelete) return false;
+
+                const response = await fetch("./Home/delete", {
+                    method: "post",
+                    headers: {
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify({ id: event.target.dataset?.id })
+                })
+                if (response.ok) {
+                    const html = await response.text()
+                    tableContainer.replaceChildren()
+                    tableContainer.insertAdjacentHTML("afterbegin", html);
+                }
+            }
+        })
+    })
+</script> *@

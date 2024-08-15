@@ -34,7 +34,7 @@
                     <div class="mb-3 d-flex gap-3 justify-content-end">
                         @if (!Model.isEdit)
                         {
-                            <button type="submit" class="btn btn-dark" data-isEdit="@Model.isEdit">提交</button>
+                            <button type="submit" class="btn btn-dark">提交</button>
                             <button type="reset" class="btn btn-outline-dark">重設</button>
                         }
                         else
@@ -68,40 +68,8 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <div class="table--responsive">
-                            <table class="table" data-tag="tableContainer">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">日期</th>
-                                        <th scope="col">名稱</th>
-                                        <th scope="col">專案</th>
-                                        <th scope="col">説明</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if (Model?.TaskDatas != null)
-                                    {
-                                        int No = 0;
-                                        foreach (TaskData rowData in Model.TaskDatas)
-                                        {
-                                            <tr>
-                                                <th>@(++No)</th>
-                                                <td>@rowData.Created?.ToString("yyyy-MM-dd")</td>
-                                                <td>@rowData.UserName</td>
-                                                <td>@rowData.ProjectName</td>
-                                                <td>@rowData.Description</td>
-                                                <td>
-                                                    <a class="btn btn-dark" data-tag="btnEdit" asp-action="Edit" asp-controller="Home" asp-route-id="@rowData.Id">編輯</a>
-                                                    <button class="btn btn-outline-danger" data-tag="btnDelete" data-id="@(rowData.Id)">刪除</button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                        @* 建立partialView *@
+                        <partial name="/Views/Shared/_TablePartial.cshtml" for="TaskDatas">
                     </div>
                 </div>
             </div>

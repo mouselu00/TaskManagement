@@ -77,13 +77,16 @@ namespace TaskManagement.Controllers
             });
         }
 
+
+
         public IActionResult Delete([FromBody] TaskData parameter)
         {
             if (parameter?.Id != null)
             {
                 deleteCacheData(parameter.Id);
             }
-            return Ok();
+            List<TaskData> taskDatas = getCacheData();
+            return PartialView("_TablePartial", taskDatas); ;
         }
 
         public IActionResult Edit([FromRoute] string id)
