@@ -10,6 +10,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using TaskManagement.Models;
+using TaskManagement.Repositorys;
 
 namespace TaskManagement.Controllers
 {
@@ -25,14 +26,15 @@ namespace TaskManagement.Controllers
         {
             _logger = logger;
             _configuration = configuration;
-            _cache = cache;
             _connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            _cache = cache;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var taskDatas = await GetDataAllAsync();
+            var tdr = new TaskDataRepository(_configuration);
+            var taskDatas = await tdr.GetDataAllAsync();
             return View(new TaskDataViewModel
             {
                 TaskDatas = taskDatas
@@ -43,16 +45,18 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Index([FromForm] TaskData parameter)
         {
+            var tdr = new TaskDataRepository(_configuration);
             if (!ModelState.IsValid)
             {
-                var taskDatas = await GetDataAllAsync();
+
+                var taskDatas = await tdr.GetDataAllAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
                     TaskDatas = taskDatas
                 });
             }
-            await InsertAsync(parameter);
+            await tdr.InsertAsync(parameter);
             return RedirectToAction("Index");
         }
 
@@ -63,8 +67,9 @@ namespace TaskManagement.Controllers
             ModelState.Remove("Created");
             ModelState.Remove("UserName");
             ModelState.Remove("ProjectName");
+            var tdr = new TaskDataRepository(_configuration);
 
-            var taskDatas = await GetDataAllAsync();
+            var taskDatas = await tdr.GetDataAllAsync();
             if (parameter.Created != null)
             {
                 taskDatas = taskDatas.Where(x => x.Created?.ToString("yyyy-MM-dd") == parameter.Created?.ToString("yyyy-MM-dd")).ToList();
@@ -89,18 +94,21 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete([FromBody] TaskData parameter)
         {
+            var tdr = new TaskDataRepository(_configuration);
+
             if (parameter?.Id != null)
             {
-                await DeleteAsync(parameter.Id);
+                await tdr.DeleteAsync(parameter.Id);
             }
-            var taskDatas = await GetDataAllAsync();
+            var taskDatas = await tdr.GetDataAllAsync();
             return PartialView("_TablePartial", taskDatas); ;
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit([FromRoute] string id)
         {
-            var taskDatas = await GetDataAllAsync();
+            var tdr = new TaskDataRepository(_configuration);
+            var taskDatas = await tdr.GetDataAllAsync();
             var taskData = taskDatas.Where(x => x.Id.Equals(Guid.Parse(id))).FirstOrDefault<TaskData>();
             return View("Index", new TaskDataViewModel
             {
@@ -113,9 +121,10 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit([FromForm] TaskData parameter)
         {
+            var tdr = new TaskDataRepository(_configuration);
             if (!ModelState.IsValid)
             {
-                var taskDatas = await GetDataAllAsync();
+                var taskDatas = await tdr.GetDataAllAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
@@ -123,9 +132,9 @@ namespace TaskManagement.Controllers
                     isEdit = true,
                 });
             }
-            if (await DeleteAsync(parameter.Id) > 0)
+            if (await tdr.DeleteAsync(parameter.Id) > 0)
             {
-                await InsertAsync(parameter);
+                await tdr.InsertAsync(parameter);
             }
             return RedirectToAction("Index");
         }
@@ -245,54 +254,6 @@ namespace TaskManagement.Controllers
         //    _cache.Remove(cacheKey);
         //    _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
         //}
-
-        #endregion
-
-        #region repository
-        private async Task<IEnumerable<TaskData>> GetDataAllAsync()
-        {
-            IEnumerable<TaskData> result = null;
-            try
-            {
-                string sql = $"select * from TaskData ";
-                result = await _connection.QueryAsync<TaskData>(sql);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GetDataAllAsync : {ex.Message}");
-            }
-            return result;
-        }
-
-        public async Task<int> InsertAsync(TaskData parameter)
-        {
-            int rowsEffected = 0;
-            try
-            {
-                string sql = $"insert into TaskData (Id ,Created , UserName , ProjectName, Description ) values (@Id ,@Created , @UserName , @ProjectName, @Description) ";
-                rowsEffected = await _connection.ExecuteAsync(sql, new { Id = parameter.Id, Created = parameter.Created, UserName = parameter.UserName, ProjectName = parameter.ProjectName, Description = parameter.Description });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"InsertAsync : {ex.Message}");
-            }
-            return rowsEffected;
-        }
-
-        public async Task<int> DeleteAsync(Guid Id)
-        {
-            int rowsEffected = 0;
-            try
-            {
-                string sql = $"Delete TaskData Where Id = @Id";
-                rowsEffected = await _connection.ExecuteAsync(sql, new { Id = Id });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"DeleteAsync : {ex.Message}");
-            }
-            return rowsEffected;
-        }
 
         #endregion
     }
