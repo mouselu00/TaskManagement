@@ -26,7 +26,7 @@
 - [X] PartielView
 - [X] 導入 `Dapper ORM` 連接資料庫
 - [X] 導入`Repository Pattern`
-- [ ] 導入 Serives 階層
+- [X] 導入 `Serives` 階層
 - [ ] WebComponents
 - [ ] 自訂 `Data Annotation`
 - [ ] `javascript` 代碼區隔

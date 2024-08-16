@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using TaskManagement.Models;
 using TaskManagement.Repositorys;
+using TaskManagement.Services;
 
 namespace TaskManagement.Controllers
 {
@@ -33,8 +34,8 @@ namespace TaskManagement.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var tdr = new TaskDataRepository(_configuration);
-            var taskDatas = await tdr.GetDataAllAsync();
+            var tds = new TaskDataService(_configuration);
+            var taskDatas = await tds.SearchAsync();
             return View(new TaskDataViewModel
             {
                 TaskDatas = taskDatas
@@ -45,18 +46,18 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Index([FromForm] TaskData parameter)
         {
-            var tdr = new TaskDataRepository(_configuration);
+            var tds = new TaskDataService(_configuration);
             if (!ModelState.IsValid)
             {
 
-                var taskDatas = await tdr.GetDataAllAsync();
+                var taskDatas = await tds.SearchAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
                     TaskDatas = taskDatas
                 });
             }
-            await tdr.InsertAsync(parameter);
+            await tds.AddAsync(parameter);
             return RedirectToAction("Index");
         }
 
@@ -67,9 +68,9 @@ namespace TaskManagement.Controllers
             ModelState.Remove("Created");
             ModelState.Remove("UserName");
             ModelState.Remove("ProjectName");
-            var tdr = new TaskDataRepository(_configuration);
+            var tds = new TaskDataService(_configuration);
 
-            var taskDatas = await tdr.GetDataAllAsync();
+            var taskDatas = await tds.SearchAsync();
             if (parameter.Created != null)
             {
                 taskDatas = taskDatas.Where(x => x.Created?.ToString("yyyy-MM-dd") == parameter.Created?.ToString("yyyy-MM-dd")).ToList();
@@ -94,21 +95,20 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete([FromBody] TaskData parameter)
         {
-            var tdr = new TaskDataRepository(_configuration);
-
+            var tds = new TaskDataService(_configuration);
             if (parameter?.Id != null)
             {
-                await tdr.DeleteAsync(parameter.Id);
+                await tds.RemoveAsync(parameter.Id);
             }
-            var taskDatas = await tdr.GetDataAllAsync();
+            var taskDatas = await tds.SearchAsync();
             return PartialView("_TablePartial", taskDatas); ;
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit([FromRoute] string id)
         {
-            var tdr = new TaskDataRepository(_configuration);
-            var taskDatas = await tdr.GetDataAllAsync();
+            var tds = new TaskDataService(_configuration);
+            var taskDatas = await tds.SearchAsync();
             var taskData = taskDatas.Where(x => x.Id.Equals(Guid.Parse(id))).FirstOrDefault<TaskData>();
             return View("Index", new TaskDataViewModel
             {
@@ -121,10 +121,10 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit([FromForm] TaskData parameter)
         {
-            var tdr = new TaskDataRepository(_configuration);
+            var tds = new TaskDataService(_configuration);
             if (!ModelState.IsValid)
             {
-                var taskDatas = await tdr.GetDataAllAsync();
+                var taskDatas = await tds.SearchAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
@@ -132,9 +132,9 @@ namespace TaskManagement.Controllers
                     isEdit = true,
                 });
             }
-            if (await tdr.DeleteAsync(parameter.Id) > 0)
+            if (await tds.RemoveAsync(parameter.Id) > 0)
             {
-                await tdr.InsertAsync(parameter);
+                await tds.AddAsync(parameter);
             }
             return RedirectToAction("Index");
         }
