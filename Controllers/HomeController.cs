@@ -104,7 +104,7 @@ namespace TaskManagement.Controllers
             var taskData = taskDatas.Where(x => x.Id.Equals(Guid.Parse(id))).FirstOrDefault<TaskData>();
             return View("Index", new TaskDataViewModel
             {
-                TaskData = taskData,
+                TaskData = taskData ?? new TaskData(),
                 TaskDatas = taskDatas,
                 isEdit = true
             });
@@ -257,7 +257,10 @@ namespace TaskManagement.Controllers
                 string sql = $"select * from TaskData ";
                 result = await _connection.QueryAsync<TaskData>(sql);
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetDataAllAsync : {ex.Message}");
+            }
             return result;
         }
 
@@ -269,7 +272,10 @@ namespace TaskManagement.Controllers
                 string sql = $"insert into TaskData (Id ,Created , UserName , ProjectName, Description ) values (@Id ,@Created , @UserName , @ProjectName, @Description) ";
                 rowsEffected = await _connection.ExecuteAsync(sql, new { Id = parameter.Id, Created = parameter.Created, UserName = parameter.UserName, ProjectName = parameter.ProjectName, Description = parameter.Description });
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                _logger.LogError($"InsertAsync : {ex.Message}");
+            }
             return rowsEffected;
         }
 
@@ -281,7 +287,10 @@ namespace TaskManagement.Controllers
                 string sql = $"Delete TaskData Where Id = @Id";
                 rowsEffected = await _connection.ExecuteAsync(sql, new { Id = Id });
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                _logger.LogError($"DeleteAsync : {ex.Message}");
+            }
             return rowsEffected;
         }
 
