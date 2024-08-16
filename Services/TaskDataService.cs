@@ -5,38 +5,35 @@ using System.Reflection.Metadata;
 using TaskManagement.Controllers;
 using TaskManagement.Models;
 using TaskManagement.Repositorys;
+using TaskManagement.Repositorys.Interfaces;
+using TaskManagement.Services.Interfaces;
 
 namespace TaskManagement.Services
 {
-    public class TaskDataService
+    public class TaskDataService : ITaskDataService
     {
-        //private readonly IConfiguration _configuration;
-        private readonly IConfiguration _configuration;
-        private readonly IDbConnection _connection;
+        private readonly ILogger<TaskDataService> _logger;
+        private readonly ITaskDataRepository _taskDataRepository;
 
-        public TaskDataService(IConfiguration configuration)
+        public TaskDataService(ILogger<TaskDataService> logger, ITaskDataRepository taskDataRepository)
         {
-            _configuration = configuration;
-            _connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            _logger = logger;
+            _taskDataRepository = taskDataRepository;
         }
-
 
         public async Task<IEnumerable<TaskData>> SearchAsync()
         {
-            var tdr = new TaskDataRepository(_configuration);
-            return await tdr.GetDataAllAsync();
+            return await _taskDataRepository.GetDataAllAsync();
         }
 
         public async Task<int> AddAsync(TaskData parameter)
         {
-            var tdr = new TaskDataRepository(_configuration);
-            return await tdr.InsertAsync(parameter);
+            return await _taskDataRepository.InsertAsync(parameter);
         }
 
         public async Task<int> RemoveAsync(Guid Id)
         {
-            var tdr = new TaskDataRepository(_configuration);
-            return Id == Guid.Empty ? 0 : await tdr.DeleteAsync(Id);
+            return Id == Guid.Empty ? 0 : await _taskDataRepository.DeleteAsync(Id);
         }
     }
 }

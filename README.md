@@ -28,9 +28,10 @@
 - [X] 導入 `Dapper ORM` 連接資料庫
 - [X] 導入`Repository Pattern`
 - [X] 導入 `Serives` 階層
-- [ ] 導入 DI （Dependency Injection）
-    - [ ] 導入 介面 （Interface）
+- [X] 導入 DI （Dependency Injection）
+    - [X] 導入 介面 （Interface）
 - [ ] 細分 `Model` 
+- [ ] 導入 UoW （UnitOfWork）
 - [ ] `javascript` 代碼區隔
 - [ ] WebComponents
 - [ ] 自訂 `Data Annotation`

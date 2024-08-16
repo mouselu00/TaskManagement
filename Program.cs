@@ -1,7 +1,16 @@
+using TaskManagement.Repositorys;
+using TaskManagement.Repositorys.Interfaces;
+using TaskManagement.Services;
+using TaskManagement.Services.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// DI
+builder.Services.AddTransient<ITaskDataService, TaskDataService>();
+builder.Services.AddTransient<ITaskDataRepository, TaskDataRepository>();
 
 var app = builder.Build();
 

@@ -12,30 +12,28 @@ using System.Threading.Tasks;
 using TaskManagement.Models;
 using TaskManagement.Repositorys;
 using TaskManagement.Services;
+using TaskManagement.Services.Interfaces;
 
 namespace TaskManagement.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly IConfiguration _configuration;
         private readonly IMemoryCache _cache;
         private readonly string cacheKey = "TaskDatas";
-        private readonly IDbConnection _connection;
+        private readonly ITaskDataService _taskDataService;
 
-        public HomeController(ILogger<HomeController> logger, IConfiguration configuration, IMemoryCache cache)
+        public HomeController(ILogger<HomeController> logger, IMemoryCache cache, ITaskDataService taskDataService)
         {
             _logger = logger;
-            _configuration = configuration;
-            _connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
             _cache = cache;
+            _taskDataService = taskDataService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var tds = new TaskDataService(_configuration);
-            var taskDatas = await tds.SearchAsync();
+            var taskDatas = await _taskDataService.SearchAsync();
             return View(new TaskDataViewModel
             {
                 TaskDatas = taskDatas
@@ -46,18 +44,17 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Index([FromForm] TaskData parameter)
         {
-            var tds = new TaskDataService(_configuration);
             if (!ModelState.IsValid)
             {
 
-                var taskDatas = await tds.SearchAsync();
+                var taskDatas = await _taskDataService.SearchAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
                     TaskDatas = taskDatas
                 });
             }
-            await tds.AddAsync(parameter);
+            await _taskDataService.AddAsync(parameter);
             return RedirectToAction("Index");
         }
 
@@ -68,9 +65,8 @@ namespace TaskManagement.Controllers
             ModelState.Remove("Created");
             ModelState.Remove("UserName");
             ModelState.Remove("ProjectName");
-            var tds = new TaskDataService(_configuration);
 
-            var taskDatas = await tds.SearchAsync();
+            var taskDatas = await _taskDataService.SearchAsync();
             if (parameter.Created != null)
             {
                 taskDatas = taskDatas.Where(x => x.Created?.ToString("yyyy-MM-dd") == parameter.Created?.ToString("yyyy-MM-dd")).ToList();
@@ -95,20 +91,18 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete([FromBody] TaskData parameter)
         {
-            var tds = new TaskDataService(_configuration);
             if (parameter?.Id != null)
             {
-                await tds.RemoveAsync(parameter.Id);
+                await _taskDataService.RemoveAsync(parameter.Id);
             }
-            var taskDatas = await tds.SearchAsync();
+            var taskDatas = await _taskDataService.SearchAsync();
             return PartialView("_TablePartial", taskDatas); ;
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit([FromRoute] string id)
         {
-            var tds = new TaskDataService(_configuration);
-            var taskDatas = await tds.SearchAsync();
+            var taskDatas = await _taskDataService.SearchAsync();
             var taskData = taskDatas.Where(x => x.Id.Equals(Guid.Parse(id))).FirstOrDefault<TaskData>();
             return View("Index", new TaskDataViewModel
             {
@@ -121,10 +115,9 @@ namespace TaskManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit([FromForm] TaskData parameter)
         {
-            var tds = new TaskDataService(_configuration);
             if (!ModelState.IsValid)
             {
-                var taskDatas = await tds.SearchAsync();
+                var taskDatas = await _taskDataService.SearchAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
@@ -132,9 +125,9 @@ namespace TaskManagement.Controllers
                     isEdit = true,
                 });
             }
-            if (await tds.RemoveAsync(parameter.Id) > 0)
+            if (await _taskDataService.RemoveAsync(parameter.Id) > 0)
             {
-                await tds.AddAsync(parameter);
+                await _taskDataService.AddAsync(parameter);
             }
             return RedirectToAction("Index");
         }

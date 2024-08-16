@@ -4,16 +4,18 @@ using Microsoft.Extensions.Caching.Memory;
 using System.Data;
 using TaskManagement.Controllers;
 using TaskManagement.Models;
+using TaskManagement.Repositorys.Interfaces;
 
 namespace TaskManagement.Repositorys
 {
-    public class TaskDataRepository
+    public class TaskDataRepository : ITaskDataRepository
     {
-        //private readonly ILogger<TaskDataRepository> _logger;
+        private readonly ILogger<TaskDataRepository> _logger;
         private readonly IConfiguration _configuration;
         private readonly IDbConnection _connection;
-        public TaskDataRepository(IConfiguration configuration)
+        public TaskDataRepository(ILogger<TaskDataRepository> logger, IConfiguration configuration)
         {
+            _logger = logger;
             _configuration = configuration;
             _connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
         }
@@ -28,7 +30,7 @@ namespace TaskManagement.Repositorys
             }
             catch (Exception ex)
             {
-                //_logger.LogError($"GetDataAllAsync : {ex.Message}");
+                _logger.LogError($"GetDataAllAsync : {ex.Message}");
             }
             return result;
         }
@@ -43,7 +45,7 @@ namespace TaskManagement.Repositorys
             }
             catch (Exception ex)
             {
-                //_logger.LogError($"InsertAsync : {ex.Message}");
+                _logger.LogError($"InsertAsync : {ex.Message}");
             }
             return rowsEffected;
         }
@@ -58,7 +60,7 @@ namespace TaskManagement.Repositorys
             }
             catch (Exception ex)
             {
-                //_logger.LogError($"DeleteAsync : {ex.Message}");
+                _logger.LogError($"DeleteAsync : {ex.Message}");
             }
             return rowsEffected;
         }
