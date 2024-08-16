@@ -24,17 +24,17 @@
 ## 進階處理流程
 - [X] `javascritp` 驗證（非伺服器驗證）
 - [X] PartielView
+  - [X] 非同步修改資料（不刷新頁面的方式更新資料）
 - [X] 導入 `Dapper ORM` 連接資料庫
 - [X] 導入`Repository Pattern`
 - [X] 導入 `Serives` 階層
+- [ ] 導入 DI （Dependency Injection）
+    - [ ] 導入 介面 （Interface）
+- [ ] 細分 `Model` 
+- [ ] `javascript` 代碼區隔
 - [ ] WebComponents
 - [ ] 自訂 `Data Annotation`
-- [ ] `javascript` 代碼區隔
 - [ ] 多頁處理
-- [ ] 非同步修改資料（不刷新頁面的方式更新資料）
-- [ ] 細分 `Model` 
-- [ ] 導入 DI （Dependency Injection）
-- [ ] 導入 介面 （Interface） 及 服務 （Service）
 - [ ] 導入中間件
 - [ ] 導入 `Filter`
 - [ ] 自訂 `Filter`
