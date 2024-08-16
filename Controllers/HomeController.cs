@@ -1,7 +1,12 @@
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using TaskManagement.Models;
@@ -11,19 +16,23 @@ namespace TaskManagement.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IConfiguration _configuration;
         private readonly IMemoryCache _cache;
         private readonly string cacheKey = "TaskDatas";
+        private readonly IDbConnection _connection;
 
-        public HomeController(ILogger<HomeController> logger, IMemoryCache cache)
+        public HomeController(ILogger<HomeController> logger, IConfiguration configuration, IMemoryCache cache)
         {
             _logger = logger;
+            _configuration = configuration;
             _cache = cache;
+            _connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            List<TaskData> taskDatas = getCacheData();
+            var taskDatas = await GetDataAllAsync();
             return View(new TaskDataViewModel
             {
                 TaskDatas = taskDatas
@@ -31,31 +40,31 @@ namespace TaskManagement.Controllers
 
         }
 
-
         [HttpPost]
-        public IActionResult Index([FromForm] TaskData parameter)
+        public async Task<IActionResult> Index([FromForm] TaskData parameter)
         {
             if (!ModelState.IsValid)
             {
-                List<TaskData> taskDatas = getCacheData();
+                var taskDatas = await GetDataAllAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
                     TaskDatas = taskDatas
                 });
             }
-            addCacheData(parameter);
+            await InsertAsync(parameter);
             return RedirectToAction("Index");
         }
 
-        public IActionResult Search([FromQuery] TaskData parameter)
+        [HttpGet]
+        public async Task<IActionResult> Search([FromQuery] TaskData parameter)
         {
             // bypass the validation DataAnnotation
             ModelState.Remove("Created");
             ModelState.Remove("UserName");
             ModelState.Remove("ProjectName");
 
-            List<TaskData> taskDatas = getCacheData();
+            var taskDatas = await GetDataAllAsync();
             if (parameter.Created != null)
             {
                 taskDatas = taskDatas.Where(x => x.Created?.ToString("yyyy-MM-dd") == parameter.Created?.ToString("yyyy-MM-dd")).ToList();
@@ -77,36 +86,36 @@ namespace TaskManagement.Controllers
             });
         }
 
-
-
-        public IActionResult Delete([FromBody] TaskData parameter)
+        [HttpPost]
+        public async Task<IActionResult> Delete([FromBody] TaskData parameter)
         {
             if (parameter?.Id != null)
             {
-                deleteCacheData(parameter.Id);
+                await DeleteAsync(parameter.Id);
             }
-            List<TaskData> taskDatas = getCacheData();
+            var taskDatas = await GetDataAllAsync();
             return PartialView("_TablePartial", taskDatas); ;
         }
 
-        public IActionResult Edit([FromRoute] string id)
+        [HttpGet]
+        public async Task<IActionResult> Edit([FromRoute] string id)
         {
-            List<TaskData> taskDatas = getCacheData();
-            int index = taskDatas.FindIndex(taskData => taskData.Id == new Guid(id));
+            var taskDatas = await GetDataAllAsync();
+            var taskData = taskDatas.Where(x => x.Id.Equals(Guid.Parse(id))).FirstOrDefault<TaskData>();
             return View("Index", new TaskDataViewModel
             {
-                TaskData = taskDatas[index],
+                TaskData = taskData,
                 TaskDatas = taskDatas,
                 isEdit = true
             });
         }
 
         [HttpPost]
-        public IActionResult Edit([FromForm] TaskData parameter)
+        public async Task<IActionResult> Edit([FromForm] TaskData parameter)
         {
             if (!ModelState.IsValid)
             {
-                List<TaskData> taskDatas = getCacheData();
+                var taskDatas = await GetDataAllAsync();
                 return View("Index", new TaskDataViewModel
                 {
                     TaskData = parameter,
@@ -114,8 +123,10 @@ namespace TaskManagement.Controllers
                     isEdit = true,
                 });
             }
-            deleteCacheData(parameter.Id);
-            addCacheData(parameter);
+            if (await DeleteAsync(parameter.Id) > 0)
+            {
+                await InsertAsync(parameter);
+            }
             return RedirectToAction("Index");
         }
 
@@ -127,115 +138,153 @@ namespace TaskManagement.Controllers
         }
 
 
-        #region Service
-        private List<TaskData> SetFakeData()
+        #region cache
+        //private List<TaskData> SetFakeData()
+        //{
+        //    // faske data
+        //    List<TaskData> taskDatas = new List<TaskData>
+        //    {
+        //        new TaskData{ UserName="小明" , ProjectName="部落格管理系統" , Description="信件處理"},
+        //        new TaskData{ UserName="小明" , ProjectName="電商管理系統" , Description="遠端更新"},
+        //    };
+        //    return taskDatas;
+        //}
+
+        //private List<TaskData> getCacheData()
+        //{
+        //    List<TaskData> taskDatas = new List<TaskData>();
+        //    var cacheEntryOption = new MemoryCacheEntryOptions()
+        //          .SetSlidingExpiration(TimeSpan.FromMinutes(1))
+        //          .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+        //          .SetPriority(CacheItemPriority.Normal);
+
+        //    if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+        //    {
+        //        // faske data
+        //        taskDatas = SetFakeData();
+        //        _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+        //    }
+        //    if (items != null)
+        //    {
+        //        taskDatas = items.ToList();
+        //        _cache.Remove(cacheKey);
+        //        _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+        //    }
+
+        //    return taskDatas;
+        //}
+        //private TaskData getCacheData(Guid Id)
+        //{
+        //    List<TaskData> taskDatas = new List<TaskData>();
+        //    var cacheEntryOption = new MemoryCacheEntryOptions()
+        //          .SetSlidingExpiration(TimeSpan.FromMinutes(1))
+        //          .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+        //          .SetPriority(CacheItemPriority.Normal);
+
+        //    if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+        //    {
+        //        // faske data
+        //        taskDatas = SetFakeData();
+        //        _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+        //    }
+        //    if (items != null)
+        //    {
+        //        taskDatas = items.ToList();
+        //        _cache.Remove(cacheKey);
+        //        _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+        //    }
+        //    int index = taskDatas.FindIndex(taskData => taskData.Id == Id);
+
+        //    return taskDatas[index];
+        //}
+
+        //private void addCacheData(TaskData parameter)
+        //{
+        //    List<TaskData> taskDatas = new List<TaskData>();
+        //    var cacheEntryOption = new MemoryCacheEntryOptions()
+        //          .SetSlidingExpiration(TimeSpan.FromMinutes(1))
+        //          .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+        //          .SetPriority(CacheItemPriority.Normal);
+
+        //    if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+        //    {
+        //        // faske data
+        //        taskDatas = SetFakeData();
+        //    }
+        //    if (items != null)
+        //    {
+        //        taskDatas = items.ToList();
+        //    }
+        //    taskDatas.Add(parameter);
+        //    _cache.Remove(cacheKey);
+        //    _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+        //}
+
+        //private void deleteCacheData(Guid Id)
+        //{
+        //    List<TaskData> taskDatas = new List<TaskData>();
+        //    var cacheEntryOption = new MemoryCacheEntryOptions()
+        //          .SetSlidingExpiration(TimeSpan.FromMinutes(1))
+        //          .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
+        //          .SetPriority(CacheItemPriority.Normal);
+
+        //    if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+        //    {
+        //        // faske data
+        //        taskDatas = SetFakeData();
+        //    }
+        //    if (items != null)
+        //    {
+        //        taskDatas = items.ToList();
+        //    }
+        //    int index = taskDatas.FindIndex(taskData => taskData.Id == Id);
+        //    if (index >= 0)
+        //    {
+        //        taskDatas.RemoveAt(index);
+        //    }
+        //    _cache.Remove(cacheKey);
+        //    _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+        //}
+
+        #endregion
+
+        #region repository
+        private async Task<IEnumerable<TaskData>> GetDataAllAsync()
         {
-            // faske data
-            List<TaskData> taskDatas = new List<TaskData>
+            IEnumerable<TaskData> result = null;
+            try
             {
-                new TaskData{ UserName="小明" , ProjectName="部落格管理系統" , Description="信件處理"},
-                new TaskData{ UserName="小明" , ProjectName="電商管理系統" , Description="遠端更新"},
-            };
-            return taskDatas;
+                string sql = $"select * from TaskData ";
+                result = await _connection.QueryAsync<TaskData>(sql);
+            }
+            catch (Exception ex) { }
+            return result;
         }
 
-        private List<TaskData> getCacheData()
+        public async Task<int> InsertAsync(TaskData parameter)
         {
-            List<TaskData> taskDatas = new List<TaskData>();
-            var cacheEntryOption = new MemoryCacheEntryOptions()
-                  .SetSlidingExpiration(TimeSpan.FromMinutes(1))
-                  .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-                  .SetPriority(CacheItemPriority.Normal);
-
-            if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+            int rowsEffected = 0;
+            try
             {
-                // faske data
-                taskDatas = SetFakeData();
-                _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+                string sql = $"insert into TaskData (Id ,Created , UserName , ProjectName, Description ) values (@Id ,@Created , @UserName , @ProjectName, @Description) ";
+                rowsEffected = await _connection.ExecuteAsync(sql, new { Id = parameter.Id, Created = parameter.Created, UserName = parameter.UserName, ProjectName = parameter.ProjectName, Description = parameter.Description });
             }
-            if (items != null)
-            {
-                taskDatas = items.ToList();
-                _cache.Remove(cacheKey);
-                _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
-            }
-
-            return taskDatas;
-        }
-        private TaskData getCacheData(Guid Id)
-        {
-            List<TaskData> taskDatas = new List<TaskData>();
-            var cacheEntryOption = new MemoryCacheEntryOptions()
-                  .SetSlidingExpiration(TimeSpan.FromMinutes(1))
-                  .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-                  .SetPriority(CacheItemPriority.Normal);
-
-            if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
-            {
-                // faske data
-                taskDatas = SetFakeData();
-                _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
-            }
-            if (items != null)
-            {
-                taskDatas = items.ToList();
-                _cache.Remove(cacheKey);
-                _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
-            }
-            int index = taskDatas.FindIndex(taskData => taskData.Id == Id);
-
-            return taskDatas[index];
+            catch (Exception ex) { }
+            return rowsEffected;
         }
 
-
-        private void addCacheData(TaskData parameter)
+        public async Task<int> DeleteAsync(Guid Id)
         {
-            List<TaskData> taskDatas = new List<TaskData>();
-            var cacheEntryOption = new MemoryCacheEntryOptions()
-                  .SetSlidingExpiration(TimeSpan.FromMinutes(1))
-                  .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-                  .SetPriority(CacheItemPriority.Normal);
-
-            if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
+            int rowsEffected = 0;
+            try
             {
-                // faske data
-                taskDatas = SetFakeData();
+                string sql = $"Delete TaskData Where Id = @Id";
+                rowsEffected = await _connection.ExecuteAsync(sql, new { Id = Id });
             }
-            if (items != null)
-            {
-                taskDatas = items.ToList();
-            }
-            taskDatas.Add(parameter);
-            _cache.Remove(cacheKey);
-            _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
+            catch (Exception ex) { }
+            return rowsEffected;
         }
 
-        private void deleteCacheData(Guid Id)
-        {
-            List<TaskData> taskDatas = new List<TaskData>();
-            var cacheEntryOption = new MemoryCacheEntryOptions()
-                  .SetSlidingExpiration(TimeSpan.FromMinutes(1))
-                  .SetAbsoluteExpiration(TimeSpan.FromMinutes(2))
-                  .SetPriority(CacheItemPriority.Normal);
-
-            if (!_cache.TryGetValue(cacheKey, out IEnumerable<TaskData>? items))
-            {
-                // faske data
-                taskDatas = SetFakeData();
-            }
-            if (items != null)
-            {
-                taskDatas = items.ToList();
-            }
-            int index = taskDatas.FindIndex(taskData => taskData.Id == Id);
-            if (index >= 0)
-            {
-                taskDatas.RemoveAt(index);
-            }
-            _cache.Remove(cacheKey);
-            _cache.Set<List<TaskData>>(cacheKey, taskDatas, cacheEntryOption);
-        }
-
-        #endregion 
+        #endregion
     }
 }

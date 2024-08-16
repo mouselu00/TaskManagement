@@ -28,7 +28,7 @@ namespace TaskManagement.Models
     {
         public TaskData TaskData { get; set; } = new TaskData();
 
-        public List<TaskData>? TaskDatas { get; set; } = null;
+        public IEnumerable<TaskData>? TaskDatas { get; set; } = null;
 
         public bool isEdit { get; set; } = false;
     }
