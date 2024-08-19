@@ -1,4 +1,4 @@
-﻿@model TaskDataViewModel
+﻿@model TaskManagement.ViewModels.TaskDataViewModel
 @{
     ViewData["Title"] = "Home Page";
 }
@@ -61,7 +61,7 @@
                             <input type="text" class="form-control" asp-for="TaskData.UserName" name="UserName" value="@Model.TaskData.UserName" placeholder="名稱" />
                             <input type="text" class="form-control" asp-for="TaskData.ProjectName" name="ProjectName" value="@Model.TaskData.ProjectName" placeholder="專案" />
                             <button type="submit" class="btn btn-dark text-nowrap">查詢</button>
-                            <button type="reset" class="btn btn-outline-dark text-nowrap">重設</button>
+                            <a class="btn btn-outline-dark text-nowrap" asp-action="Index" asp-asp-controller="Home">重設</a>
                         </form>
                     </div>
                 </div>

@@ -31,6 +31,9 @@
 - [X] 導入 DI （Dependency Injection）
     - [X] 導入 介面 （Interface）
 - [ ] 細分 `Model` 
+  - [ ] Dto （Data transfrer Obkect）
+  - [ ] ViewModel
+  - [ ] Entities
 - [ ] 導入 UoW （UnitOfWork）
 - [ ] `javascript` 代碼區隔
 - [ ] WebComponents

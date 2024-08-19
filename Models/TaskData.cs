@@ -2,10 +2,6 @@
 
 namespace TaskManagement.Models
 {
-    public class Entities
-    {
-    }
-
     public class TaskData
     {
         public Guid Id { get; set; } = Guid.NewGuid();
@@ -22,14 +18,5 @@ namespace TaskManagement.Models
 
         public string? Description { get; set; } = null;
 
-    }
-
-    public class TaskDataViewModel
-    {
-        public TaskData TaskData { get; set; } = new TaskData();
-
-        public IEnumerable<TaskData>? TaskDatas { get; set; } = null;
-
-        public bool isEdit { get; set; } = false;
     }
 }
