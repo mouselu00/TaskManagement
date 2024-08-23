@@ -34,7 +34,8 @@
   - [X] Dto （Data transfrer Obkect）
   - [X] ViewModel
   - [X] Entities
-- [ ] 導入 UoW （UnitOfWork）
+- [X] 導入 UoW （UnitOfWork）
+- [ ] 套用Mapping套件（AutoMapper）
 - [ ] `javascript` 代碼區隔
 - [ ] ViewComponents
 - [ ] 自訂 `Data Annotation`

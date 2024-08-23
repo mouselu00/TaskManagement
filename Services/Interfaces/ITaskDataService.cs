@@ -11,5 +11,7 @@ namespace TaskManagement.Services.Interfaces
         public Task<int> AddAsync(TaskData parameter);
 
         public Task<int> RemoveAsync(Guid Id);
+
+        public Task<int> UpdateAsync(TaskData parameter);
     }
 }

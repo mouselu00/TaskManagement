@@ -211,20 +211,16 @@ namespace TaskManagement.Controllers
                     isEdit = true,
                 });
             }
-            if (await _taskDataService.RemoveAsync(parameter.Id) > 0)
+            // Mapping
+            var editTaskData = new TaskData
             {
-                // Mapping
-                var editTaskData = new TaskData
-                {
-                    Id = parameter.Id,
-                    ProjectName = parameter.ProjectName,
-                    UserName = parameter.UserName,
-                    Description = parameter.Description,
-                    Created = parameter.Created,
-                };
-
-                await _taskDataService.AddAsync(editTaskData);
-            }
+                Id = parameter.Id,
+                ProjectName = parameter.ProjectName,
+                UserName = parameter.UserName,
+                Description = parameter.Description,
+                Created = parameter.Created,
+            };
+            await _taskDataService.UpdateAsync(editTaskData);
             return RedirectToAction("Index");
         }
 

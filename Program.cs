@@ -11,6 +11,7 @@ builder.Services.AddControllersWithViews();
 
 // DI
 builder.Services.AddScoped<DapperContext>();
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<ITaskDataService, TaskDataService>();
 builder.Services.AddTransient<ITaskDataRepository, TaskDataRepository>();
 

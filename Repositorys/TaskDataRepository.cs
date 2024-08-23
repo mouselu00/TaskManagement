@@ -41,7 +41,7 @@ namespace TaskManagement.Repositorys
             try
             {
                 string sql = $"insert into TaskData (Id ,Created , UserName , ProjectName, Description ) values (@Id ,@Created , @UserName , @ProjectName, @Description) ";
-                rowsEffected = await _dapperContext.dbConnection.ExecuteAsync(sql, new { Id = parameter.Id, Created = parameter.Created, UserName = parameter.UserName, ProjectName = parameter.ProjectName, Description = parameter.Description });
+                rowsEffected = await _dapperContext.dbConnection.ExecuteAsync(sql, new { Id = parameter.Id, Created = parameter.Created, UserName = parameter.UserName, ProjectName = parameter.ProjectName, Description = parameter.Description }, _dapperContext.dbTransaction);
             }
             catch (Exception ex)
             {
@@ -56,7 +56,7 @@ namespace TaskManagement.Repositorys
             try
             {
                 string sql = $"Delete TaskData Where Id = @Id";
-                rowsEffected = await _dapperContext.dbConnection.ExecuteAsync(sql, new { Id = Id });
+                rowsEffected = await _dapperContext.dbConnection.ExecuteAsync(sql, new { Id = Id }, _dapperContext.dbTransaction);
             }
             catch (Exception ex)
             {
