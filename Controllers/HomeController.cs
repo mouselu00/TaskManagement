@@ -8,6 +8,8 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using TaskManagement.Models;
 using TaskManagement.Repositorys;
@@ -35,32 +37,66 @@ namespace TaskManagement.Controllers
         public async Task<IActionResult> Index()
         {
             var taskDatas = await _taskDataService.SearchAsync();
-            return View(new TaskDataViewModel
+
+            // Mapping
+            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
             {
-                TaskDatas = taskDatas
+                Id = x.Id,
+                ProjectName = x.ProjectName,
+                UserName = x.UserName,
+                Description = x.Description,
+                Created = x.Created
+            });
+
+
+            return View(new TaskDataCollectionViewModel
+            {
+                TaskDataList = TaskDataList
             });
 
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index([FromForm] TaskData parameter)
+        public async Task<IActionResult> Index([FromForm] TaskDataFormViewModel parameter)
         {
             if (!ModelState.IsValid)
             {
 
                 var taskDatas = await _taskDataService.SearchAsync();
-                return View("Index", new TaskDataViewModel
+
+                // Mapping
+                var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
                 {
-                    TaskData = parameter,
-                    TaskDatas = taskDatas
+                    Id = x.Id,
+                    ProjectName = x.ProjectName,
+                    UserName = x.UserName,
+                    Description = x.Description,
+                    Created = x.Created
+                });
+
+                return View("Index", new TaskDataCollectionViewModel
+                {
+                    TaskDataFrom = parameter,
+                    TaskDataList = TaskDataList
                 });
             }
-            await _taskDataService.AddAsync(parameter);
+
+            // Mapping
+            var addTaskData = new TaskData
+            {
+                Id = parameter.Id,
+                ProjectName = parameter.ProjectName,
+                UserName = parameter.UserName,
+                Description = parameter.Description,
+                Created = parameter.Created
+            };
+
+            await _taskDataService.AddAsync(addTaskData);
             return RedirectToAction("Index");
         }
 
         [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] TaskData parameter)
+        public async Task<IActionResult> Search([FromQuery] TaskDataFormViewModel parameter)
         {
             // bypass the validation DataAnnotation
             ModelState.Remove("Created");
@@ -82,22 +118,42 @@ namespace TaskManagement.Controllers
                 taskDatas = taskDatas.Where(x => x.ProjectName?.ToString() == parameter.ProjectName?.ToString()).ToList();
             }
 
-            return View("Index", new TaskDataViewModel
+            // Mapping
+            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
             {
-                TaskData = parameter,
-                TaskDatas = taskDatas
+                Id = x.Id,
+                ProjectName = x.ProjectName,
+                UserName = x.UserName,
+                Description = x.Description,
+                Created = x.Created
+            });
+
+            return View("Index", new TaskDataCollectionViewModel
+            {
+                TaskDataFrom = parameter,
+                TaskDataList = TaskDataList
             });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete([FromBody] TaskData parameter)
+        public async Task<IActionResult> Delete([FromBody] TaskDataFormViewModel parameter)
         {
             if (parameter?.Id != null)
             {
                 await _taskDataService.RemoveAsync(parameter.Id);
             }
             var taskDatas = await _taskDataService.SearchAsync();
-            return PartialView("_TablePartial", taskDatas); ;
+
+            // Mapping
+            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
+            {
+                Id = x.Id,
+                ProjectName = x.ProjectName,
+                UserName = x.UserName,
+                Description = x.Description,
+                Created = x.Created
+            });
+            return PartialView("_TablePartial", TaskDataList); ;
         }
 
         [HttpGet]
@@ -105,30 +161,69 @@ namespace TaskManagement.Controllers
         {
             var taskDatas = await _taskDataService.SearchAsync();
             var taskData = taskDatas.Where(x => x.Id.Equals(Guid.Parse(id))).FirstOrDefault<TaskData>();
-            return View("Index", new TaskDataViewModel
+
+            //Mapping
+            var searchTaskData = taskData != null ? new TaskDataFormViewModel
             {
-                TaskData = taskData ?? new TaskData(),
-                TaskDatas = taskDatas,
+                Id = taskData.Id,
+                ProjectName = taskData?.ProjectName,
+                UserName = taskData?.UserName,
+                Description = taskData?.Description,
+            } : new TaskDataFormViewModel();
+            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
+            {
+                Id = x.Id,
+                ProjectName = x.ProjectName,
+                UserName = x.UserName,
+                Description = x.Description,
+                Created = x.Created
+            });
+
+            return View("Index", new TaskDataCollectionViewModel
+            {
+                TaskDataFrom = searchTaskData,
+                TaskDataList = TaskDataList,
                 isEdit = true
             });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit([FromForm] TaskData parameter)
+        public async Task<IActionResult> Edit([FromForm] TaskDataFormViewModel parameter)
         {
             if (!ModelState.IsValid)
             {
                 var taskDatas = await _taskDataService.SearchAsync();
-                return View("Index", new TaskDataViewModel
+
+                // Mapping
+                var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
                 {
-                    TaskData = parameter,
-                    TaskDatas = taskDatas,
+                    Id = x.Id,
+                    ProjectName = x.ProjectName,
+                    UserName = x.UserName,
+                    Description = x.Description,
+                    Created = x.Created
+                });
+
+                return View("Index", new TaskDataCollectionViewModel
+                {
+                    TaskDataFrom = parameter,
+                    TaskDataList = TaskDataList,
                     isEdit = true,
                 });
             }
             if (await _taskDataService.RemoveAsync(parameter.Id) > 0)
             {
-                await _taskDataService.AddAsync(parameter);
+                // Mapping
+                var editTaskData = new TaskData
+                {
+                    Id = parameter.Id,
+                    ProjectName = parameter.ProjectName,
+                    UserName = parameter.UserName,
+                    Description = parameter.Description,
+                    Created = parameter.Created,
+                };
+
+                await _taskDataService.AddAsync(editTaskData);
             }
             return RedirectToAction("Index");
         }

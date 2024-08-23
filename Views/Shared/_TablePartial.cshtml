@@ -1,4 +1,5 @@
-﻿@model IEnumerable<TaskData>
+﻿@using TaskManagement.ViewModels
+@model IEnumerable<TaskDataItemViewModel>
 
 
 
@@ -18,7 +19,7 @@
             @if (Model != null)
             {
                 int No = 0;
-                foreach (TaskData rowData in Model)
+                foreach (TaskDataItemViewModel rowData in Model)
                 {
                     <tr>
                         <th>@(++No)</th>

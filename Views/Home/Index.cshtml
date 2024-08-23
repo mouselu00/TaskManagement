@@ -1,4 +1,4 @@
-﻿@model TaskManagement.ViewModels.TaskDataViewModel
+﻿@model TaskManagement.ViewModels.TaskDataCollectionViewModel
 @{
     ViewData["Title"] = "Home Page";
 }
@@ -15,19 +15,19 @@
                     <div class="mb-3 row">
                         <label for="UserName" class="col-sm-3 col-form-label">使用者名稱</label>
                         <div class="col-sm-9">
-                            <input type="text" asp-for="TaskData.UserName" name="UserName" class="form-control" id="UserName">
+                            <input type="text" asp-for="TaskDataFrom.UserName" name="UserName" class="form-control" id="UserName">
                         </div>
                     </div>
                     <div class="mb-3 row">
                         <label for="ProjectName" class="col-sm-3 col-form-label">專案名稱</label>
                         <div class="col-sm-9">
-                            <input type="text" asp-for="TaskData.ProjectName" name="ProjectName" class="form-control" id="ProjectName">
+                            <input type="text" asp-for="TaskDataFrom.ProjectName" name="ProjectName" class="form-control" id="ProjectName">
                         </div>
                     </div>
                     <div class="mb-3 row">
                         <label for="Description" class="col-sm-3 col-form-label">説明</label>
                         <div class="col-sm-9">
-                            <textarea asp-for="TaskData.Description" name="Description" class="form-control" id="Description">
+                            <textarea asp-for="TaskDataFrom.Description" name="Description" class="form-control" id="Description">
                         </textarea>
                         </div>
                     </div>
@@ -41,7 +41,7 @@
                         {
                             <button type="submit" class="btn btn-dark" data-isEdit="@Model.isEdit">更新</button>
                             <a class="btn btn-outline-danger" asp-action="Index" asp-controller="Home">取消</a>
-                            <input type="hidden" asp-for="@Model.TaskData.Id" name="Id" />
+                            <input type="hidden" asp-for="TaskDataFrom.Id" name="Id" />
                         }
                     </div>
                     <div class="mb-3 row">
@@ -57,9 +57,9 @@
                 <div class="card">
                     <div class="card-body">
                         <form class="d-flex gap-3" asp-action="Search" asp-controller="Home" method="GET" data-tag="formSearch">
-                            <input type="date" class="form-control" asp-for="TaskData.Created" name="Created" value="@Model.TaskData.Created?.ToString("yyyy-MM-dd")" />
-                            <input type="text" class="form-control" asp-for="TaskData.UserName" name="UserName" value="@Model.TaskData.UserName" placeholder="名稱" />
-                            <input type="text" class="form-control" asp-for="TaskData.ProjectName" name="ProjectName" value="@Model.TaskData.ProjectName" placeholder="專案" />
+                            <input type="date" class="form-control" asp-for="TaskDataFrom.Created" name="Created" value="@Model.TaskDataFrom.Created?.ToString("yyyy-MM-dd")" />
+                            <input type="text" class="form-control" asp-for="TaskDataFrom.UserName" name="UserName" value="@Model.TaskDataFrom.UserName" placeholder="名稱" />
+                            <input type="text" class="form-control" asp-for="TaskDataFrom.ProjectName" name="ProjectName" value="@Model.TaskDataFrom.ProjectName" placeholder="專案" />
                             <button type="submit" class="btn btn-dark text-nowrap">查詢</button>
                             <a class="btn btn-outline-dark text-nowrap" asp-action="Index" asp-asp-controller="Home">重設</a>
                         </form>
@@ -70,7 +70,7 @@
                 <div class="card">
                     <div class="card-body">
                         @* 建立partialView *@
-                        <partial name="/Views/Shared/_TablePartial.cshtml" for="TaskDatas">
+                        <partial name="/Views/Shared/_TablePartial.cshtml" for="TaskDataList">
                     </div>
                 </div>
             </div>

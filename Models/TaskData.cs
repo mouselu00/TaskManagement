@@ -4,19 +4,15 @@ namespace TaskManagement.Models
 {
     public class TaskData
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
 
-        [Required]
-        [DataType(dataType: DataType.Date)]
-        public DateTime? Created { get; set; } = DateTime.Now;
+        public DateTime? Created { get; set; }
 
-        [Required(AllowEmptyStrings = false, ErrorMessage = "人員名稱必填！")]
-        public string? UserName { get; set; } = null;
+        public string? UserName { get; set; }
 
-        [Required(AllowEmptyStrings = false, ErrorMessage = "專案名稱必填！")]
-        public string? ProjectName { get; set; } = null;
+        public string? ProjectName { get; set; }
 
-        public string? Description { get; set; } = null;
+        public string? Description { get; set; }
 
     }
 }
