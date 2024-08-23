@@ -36,7 +36,7 @@
   - [X] Entities
 - [ ] 導入 UoW （UnitOfWork）
 - [ ] `javascript` 代碼區隔
-- [ ] WebComponents
+- [ ] ViewComponents
 - [ ] 自訂 `Data Annotation`
 - [ ] 多頁處理
 - [ ] 導入中間件

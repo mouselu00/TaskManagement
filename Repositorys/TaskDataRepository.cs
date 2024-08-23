@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
 using System.Data;
 using TaskManagement.Controllers;
+using TaskManagement.DBContext;
 using TaskManagement.Models;
 using TaskManagement.Repositorys.Interfaces;
 
@@ -11,13 +12,12 @@ namespace TaskManagement.Repositorys
     public class TaskDataRepository : ITaskDataRepository
     {
         private readonly ILogger<TaskDataRepository> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly IDbConnection _connection;
-        public TaskDataRepository(ILogger<TaskDataRepository> logger, IConfiguration configuration)
+        private readonly DapperContext _dapperContext;
+
+        public TaskDataRepository(ILogger<TaskDataRepository> logger, DapperContext dapperContext)
         {
             _logger = logger;
-            _configuration = configuration;
-            _connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            _dapperContext = dapperContext;
         }
 
         public async Task<IEnumerable<TaskData>> GetDataAllAsync()
@@ -26,7 +26,7 @@ namespace TaskManagement.Repositorys
             try
             {
                 string sql = $"select * from TaskData ";
-                result = await _connection.QueryAsync<TaskData>(sql);
+                result = await _dapperContext.dbConnection.QueryAsync<TaskData>(sql);
             }
             catch (Exception ex)
             {
@@ -41,7 +41,7 @@ namespace TaskManagement.Repositorys
             try
             {
                 string sql = $"insert into TaskData (Id ,Created , UserName , ProjectName, Description ) values (@Id ,@Created , @UserName , @ProjectName, @Description) ";
-                rowsEffected = await _connection.ExecuteAsync(sql, new { Id = parameter.Id, Created = parameter.Created, UserName = parameter.UserName, ProjectName = parameter.ProjectName, Description = parameter.Description });
+                rowsEffected = await _dapperContext.dbConnection.ExecuteAsync(sql, new { Id = parameter.Id, Created = parameter.Created, UserName = parameter.UserName, ProjectName = parameter.ProjectName, Description = parameter.Description });
             }
             catch (Exception ex)
             {
@@ -56,7 +56,7 @@ namespace TaskManagement.Repositorys
             try
             {
                 string sql = $"Delete TaskData Where Id = @Id";
-                rowsEffected = await _connection.ExecuteAsync(sql, new { Id = Id });
+                rowsEffected = await _dapperContext.dbConnection.ExecuteAsync(sql, new { Id = Id });
             }
             catch (Exception ex)
             {

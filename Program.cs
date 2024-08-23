@@ -1,3 +1,4 @@
+using TaskManagement.DBContext;
 using TaskManagement.Repositorys;
 using TaskManagement.Repositorys.Interfaces;
 using TaskManagement.Services;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // DI
+builder.Services.AddScoped<DapperContext>();
 builder.Services.AddTransient<ITaskDataService, TaskDataService>();
 builder.Services.AddTransient<ITaskDataRepository, TaskDataRepository>();
 
