@@ -35,7 +35,7 @@
   - [X] ViewModel
   - [X] Entities
 - [X] 導入 UoW （UnitOfWork）
-- [ ] 套用Mapping套件（AutoMapper）
+- [X] 套用Mapping套件（Mapster）
 - [ ] `javascript` 代碼區隔
 - [ ] ViewComponents
 - [ ] 自訂 `Data Annotation`
