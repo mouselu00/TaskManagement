@@ -30,10 +30,10 @@
 - [X] 導入 `Serives` 階層
 - [X] 導入 DI （Dependency Injection）
     - [X] 導入 介面 （Interface）
-- [ ] 細分 `Model` 
-  - [ ] Dto （Data transfrer Obkect）
-  - [ ] ViewModel
-  - [ ] Entities
+- [X] 細分 `Model` 
+  - [X] Dto （Data transfrer Obkect）
+  - [X] ViewModel
+  - [X] Entities
 - [ ] 導入 UoW （UnitOfWork）
 - [ ] `javascript` 代碼區隔
 - [ ] WebComponents
