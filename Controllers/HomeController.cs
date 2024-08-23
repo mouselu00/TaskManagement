@@ -1,4 +1,5 @@
 using Dapper;
+using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,13 +23,15 @@ namespace TaskManagement.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IMapper _mapper;
         private readonly IMemoryCache _cache;
         private readonly string cacheKey = "TaskDatas";
         private readonly ITaskDataService _taskDataService;
 
-        public HomeController(ILogger<HomeController> logger, IMemoryCache cache, ITaskDataService taskDataService)
+        public HomeController(ILogger<HomeController> logger, IMapper mapper, IMemoryCache cache, ITaskDataService taskDataService)
         {
             _logger = logger;
+            _mapper = mapper;
             _cache = cache;
             _taskDataService = taskDataService;
         }
@@ -39,14 +42,15 @@ namespace TaskManagement.Controllers
             var taskDatas = await _taskDataService.SearchAsync();
 
             // Mapping
-            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
-            {
-                Id = x.Id,
-                ProjectName = x.ProjectName,
-                UserName = x.UserName,
-                Description = x.Description,
-                Created = x.Created
-            });
+            var TaskDataList = _mapper.Map<IEnumerable<TaskDataItemViewModel>>(taskDatas);
+            //var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
+            //{
+            //    Id = x.Id,
+            //    ProjectName = x.ProjectName,
+            //    UserName = x.UserName,
+            //    Description = x.Description,
+            //    Created = x.Created
+            //});
 
 
             return View(new TaskDataCollectionViewModel
@@ -65,14 +69,7 @@ namespace TaskManagement.Controllers
                 var taskDatas = await _taskDataService.SearchAsync();
 
                 // Mapping
-                var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
-                {
-                    Id = x.Id,
-                    ProjectName = x.ProjectName,
-                    UserName = x.UserName,
-                    Description = x.Description,
-                    Created = x.Created
-                });
+                var TaskDataList = _mapper.Map<IEnumerable<TaskDataItemViewModel>>(taskDatas);
 
                 return View("Index", new TaskDataCollectionViewModel
                 {
@@ -82,14 +79,7 @@ namespace TaskManagement.Controllers
             }
 
             // Mapping
-            var addTaskData = new TaskData
-            {
-                Id = parameter.Id,
-                ProjectName = parameter.ProjectName,
-                UserName = parameter.UserName,
-                Description = parameter.Description,
-                Created = parameter.Created
-            };
+            var addTaskData = _mapper.Map<TaskData>(parameter);
 
             await _taskDataService.AddAsync(addTaskData);
             return RedirectToAction("Index");
@@ -119,14 +109,7 @@ namespace TaskManagement.Controllers
             }
 
             // Mapping
-            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
-            {
-                Id = x.Id,
-                ProjectName = x.ProjectName,
-                UserName = x.UserName,
-                Description = x.Description,
-                Created = x.Created
-            });
+            var TaskDataList = _mapper.Map<IEnumerable<TaskDataItemViewModel>>(taskDatas);
 
             return View("Index", new TaskDataCollectionViewModel
             {
@@ -145,14 +128,8 @@ namespace TaskManagement.Controllers
             var taskDatas = await _taskDataService.SearchAsync();
 
             // Mapping
-            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
-            {
-                Id = x.Id,
-                ProjectName = x.ProjectName,
-                UserName = x.UserName,
-                Description = x.Description,
-                Created = x.Created
-            });
+            var TaskDataList = _mapper.Map<IEnumerable<TaskDataItemViewModel>>(taskDatas);
+
             return PartialView("_TablePartial", TaskDataList); ;
         }
 
@@ -163,21 +140,8 @@ namespace TaskManagement.Controllers
             var taskData = taskDatas.Where(x => x.Id.Equals(Guid.Parse(id))).FirstOrDefault<TaskData>();
 
             //Mapping
-            var searchTaskData = taskData != null ? new TaskDataFormViewModel
-            {
-                Id = taskData.Id,
-                ProjectName = taskData?.ProjectName,
-                UserName = taskData?.UserName,
-                Description = taskData?.Description,
-            } : new TaskDataFormViewModel();
-            var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
-            {
-                Id = x.Id,
-                ProjectName = x.ProjectName,
-                UserName = x.UserName,
-                Description = x.Description,
-                Created = x.Created
-            });
+            var searchTaskData = taskData != null ? _mapper.Map<TaskDataFormViewModel>(taskData) : new TaskDataFormViewModel();
+            var TaskDataList = _mapper.Map<IEnumerable<TaskDataItemViewModel>>(taskDatas);
 
             return View("Index", new TaskDataCollectionViewModel
             {
@@ -195,14 +159,7 @@ namespace TaskManagement.Controllers
                 var taskDatas = await _taskDataService.SearchAsync();
 
                 // Mapping
-                var TaskDataList = taskDatas.Select(x => new TaskDataItemViewModel
-                {
-                    Id = x.Id,
-                    ProjectName = x.ProjectName,
-                    UserName = x.UserName,
-                    Description = x.Description,
-                    Created = x.Created
-                });
+                var TaskDataList = _mapper.Map<IEnumerable<TaskDataItemViewModel>>(taskDatas);
 
                 return View("Index", new TaskDataCollectionViewModel
                 {
@@ -212,14 +169,7 @@ namespace TaskManagement.Controllers
                 });
             }
             // Mapping
-            var editTaskData = new TaskData
-            {
-                Id = parameter.Id,
-                ProjectName = parameter.ProjectName,
-                UserName = parameter.UserName,
-                Description = parameter.Description,
-                Created = parameter.Created,
-            };
+            var editTaskData = _mapper.Map<TaskData>(parameter);
             await _taskDataService.UpdateAsync(editTaskData);
             return RedirectToAction("Index");
         }
