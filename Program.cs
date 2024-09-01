@@ -1,5 +1,6 @@
 using Mapster;
 using TaskManagement.DBContext;
+using TaskManagement.Models;
 using TaskManagement.Repositorys;
 using TaskManagement.Repositorys.Interfaces;
 using TaskManagement.Services;
@@ -13,9 +14,11 @@ builder.Services.AddMapster();
 
 // DI
 builder.Services.AddScoped<DapperContext>();
-builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
-builder.Services.AddTransient<ITaskDataService, TaskDataService>();
-builder.Services.AddTransient<ITaskDataRepository, TaskDataRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ITaskDataService, TaskDataService>();
+builder.Services.AddScoped<ITaskDataRepository, TaskDataRepository>();
+builder.Services.AddScoped<IGenericRepository<TaskData>, GenericRepository<TaskData>>();
+
 
 // Service
 var app = builder.Build();
